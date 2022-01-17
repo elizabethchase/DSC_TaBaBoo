@@ -1,0 +1,179 @@
+---
+title: "DSC: Dynamic Statistical Comparisons"
+author: "Elizabeth Chase"
+date: "1/21/2022"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+```
+
+## What is DSC?
+
+- DSC is a tool from Matthew Stephens' lab to make statistical simulation studies more easily reproducible.
+
+- Primarily programmed by Gao Wang.
+
+- Interfaces between R and Python.
+
+- I think it's incredible.
+
+## What is DSC?
+
+- First recommended to me by Jean Morrison in Winter 2021 as one of their favorite tools.
+
+- I did not do anything with that information until November 2021, when I was frantically working on my proposal. 
+
+- Has some start-up costs to figure out how to use it, but I think those costs are well-worth it.
+
+- Kudos to Dan Barker who worked tirelessly with me to figure out how to get it to interface with the Great Lakes and Biostat clusters. 
+
+- Has excellent documentation [here](https://stephenslab.github.io/dsc-wiki/overview.html).
+
+## What is DSC?
+
+In statistics, we create a lot of simulation studies. 
+
+Traditional framework:
+
+- Generate some made-up data (often we generate many different scenarios--varying sample size, data-generating mechanism, correlation, etc.).
+
+- Analyze the data with a method you have developed, and methods that a bunch of other people have developed.
+
+- Assess performance of each of these analysis methods using metrics like root-mean-square-error, bias, variance, confidence interval coverage, etc.
+
+- Crow triumphantly that your method performs better than everyone else's methods in terms of the above metrics.
+
+## What is DSC?
+
+At least in my experience, creating a simulation study involves a lot of fiddly code. Usually:
+
+- A script to generate all my data across different scenarios.
+
+- A script to analyze the generated data across different scenarios.
+
+- A script to assess performance of all the analysis methods across all the different scenarios.
+
+- A script to coordinate the above 3 scripts
+
+- A script to aggregate all of my results from the above 4 scripts
+
+- A slurm file (or two, or three) to implement all of the above code on the cluster
+
+## What is DSC?
+
+- DSC splits a simulation study into *modules*.
+
+- You can create as many types of modules as you want, but the standard ones are: simulate, analyze, and score.
+
+- DSC then does the work of efficiently running all of these modules, passing information between them, and then aggregating the outputs of these modules for you after coding finishes.
+
+- Offers major computational time gains, in my experience
+
+## What is DSC?
+
+As a result, this reduces your simulation study programming to:
+
+- A single DSC file for your entire simulation study--which is extremely easy to read for people familiar with DSC syntax, and only requires you to program the essential bits (e.g. the data-generation and analysis bits) rather than the annoying bits (passing generated data to analysis to scoring to aggregation).
+
+- A single .yaml file to coordinate with the cluster (minimal editing/programming required).
+
+- A single SLURM file to run your .yaml file (minimal editing/programming required).
+
+## An Example
+
+We will go through the basic_dsc.dsc file together. You create new DSC files in Text files (in R: File -> New File -> Text File), and then save it as myproject.dsc. 
+
+## An Example
+
+Once we've written our DSC, we can run it. First, we set the working directory in R to the location of our DSC file. 
+
+Then, we open up a Shell via R (confirm that the Shell is in the correct working directory).
+```{r wd, echo = TRUE}
+setwd("~/Desktop/Former Work/grad school/Extracurriculars/DSC_TaBaBoo")
+```
+
+Then we check to make sure our pipelines are correct: 
+
+**dsc example_one.dsc -h**
+
+Then we run our code for 10 replicates on 2 threads: 
+
+**dsc example_one.dsc --replicate 10 -c 2**
+
+## An Example
+
+Now that the DSC has been run, we can load the results. 
+
+Interestingly, you actually can't run the below command in R Markdown. Only in an R script. Therefore, I'm including the code so you have it, but please note that you'll need to copy-paste this into an R script file to successfully run it. 
+
+```{r output1, echo = TRUE, eval = FALSE}
+library(dscrutils)
+dscout <- dscquery(dsc.outdir = "dsc_result",
+                   targets = c("simulate", "analyze", "score",
+                               "score.error"))
+```
+
+## An Example
+
+```{r output1a, echo = FALSE}
+load("~/Desktop/Former Work/grad school/Extracurriculars/DSC_TaBaBoo/dscout.RData")
+```
+
+```{r output1b, echo = TRUE}
+head(dscout)
+```
+
+## An Example
+
+```{r output1c, echo = TRUE}
+ggplot(data = dscout) + 
+  geom_boxplot(aes(x = score, y = score.error, fill = analyze)) + 
+  facet_wrap(~simulate, scales = "free_y") + theme_bw()
+```
+
+## An Example
+
+We can:
+
+- Request more replicates
+
+- Add a new method
+
+- Add a new data-generation approach
+
+All of which will only rerun the minimum number of simulation replicates. 
+
+## Pro Tips From My Actual Experience
+
+- Check and debug as you go
+
+- Longer R code chunks need semi-colons and careful spacing or you can call an external R file 
+
+- Interfacing with R packages
+
+- Adding extra module types
+
+## Another Example
+
+We will review gaussian_basic.dsc and a [more complex example](https://github.com/stephenslab/dsc/blob/master/vignettes/ash/settings.dsc) from the DSC team.
+
+## Running DSC on the Cluster
+
+You need a .yaml file and a SLURM file (see examples). 
+
+I would also recommend checking with Dan before you submit a DSC for the first time on the cluster. He'll ask you to run some smaller tests and may have more advice on a personalized yaml file depending on your needs. 
+
+## Running DSC on the Cluster
+
+After DSC submits all the jobs, they are saved in subdirectories, and then DSC runs final checks to make sure that all files are stored in the proper place. Often SLURM cannot save the files quickly enough, and as a result the DSC will fail the final checks because it *appears* that the files aren't there. 
+
+If you get an error message saying that files were not located or that the DSC failed tests, you should just resubmit the job. The DSC will run again, it'll realize that all of the files are where they're supposed to be (because SLURM has now had time to catch up and finish saving them), and then it'll report a completed run. This re-run takes approximately 2 minutes.
+
+## Installation
+
+This was by far the worst part of the process, although much easier than installing rstan or debugging it after a Mac OSX upgrade! Follow all instructions given [here](https://stephenslab.github.io/dsc-wiki/installation.html). 
+
+If DSC query fails to run in R (it did for me), edit your .Renviron file following the instructions given [here](https://stephenslab.github.io/dsc-wiki/faq#installation-troubleshoot), then restart R and Rstudio and try again. 

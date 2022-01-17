@@ -1,0 +1,34 @@
+DSC:
+  greatlakes:
+    description: Great Lakes Cluster
+    queue_type: pbs
+    status_check_interval: 30
+    #status_check_interval: 300
+    max_running_jobs: 500
+    max_cores: 36
+    max_walltime: "48:00:00"
+    max_mem: 64G
+    task_template: |
+      #!/bin/bash
+      #SBATCH --time={walltime}
+      #SBATCH --cpus-per-task={cores}
+      #SBATCH --mem={mem//10**9}G
+      #SBATCH --job-name={job_name}
+      #SBATCH --output=/home/ecchase/slurm_output/{job_name}.out
+      #SBATCH --error=/home/ecchase/slurm_output/{job_name}.err
+      #SBATCH --account=philb0
+      #SBATCH --partition=standard
+      cd {cur_dir}
+      module load Rtidyverse/4.1.0 2> /dev/null
+    submit_cmd: sbatch {job_file}
+    submit_cmd_output: "Submitted batch job {job_id}"
+    status_cmd: squeue --job {job_id}
+    kill_cmd: scancel {job_id}
+
+default:
+  nodes_per_job: 1
+  instances_per_job: 40
+  instances_per_node: 4
+  cpus_per_instance: 1
+  mem_per_instance: 4G
+  time_per_instance: 1h
