@@ -5,8 +5,8 @@ Taylor-Boonstra-Baladandayuthapani-Henderson research group on Jan. 21, 2022.
 
 A table of contents:
 
-1. DSC_presentation.Rmd, DSC_presentation.html: Materials used to generate an
-RMarkdown presentation on how to use DSC (https://stephenslab.github.io/dsc-wiki/overview.html).
+1. DSC_presentation.Rmd, DSC_presentation.html: An RMarkdown presentation on how 
+to use DSC (https://stephenslab.github.io/dsc-wiki/overview.html).
 
 2. example_one.dsc: a simple example DSC file, taken from the developers of DSC
 (credit to Drs. Gao Wang and Matthew Stephens).

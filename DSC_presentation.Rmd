@@ -90,10 +90,11 @@ We will go through the basic_dsc.dsc file together. You create new DSC files in 
 
 Once we've written our DSC, we can run it. First, we set the working directory in R to the location of our DSC file. 
 
-Then, we open up a Shell via R (confirm that the Shell is in the correct working directory).
 ```{r wd, echo = TRUE}
 setwd("~/Desktop/Former Work/grad school/Extracurriculars/DSC_TaBaBoo")
 ```
+
+Then, we open up a Shell via R (confirm that the Shell is in the correct working directory).
 
 Then we check to make sure our pipelines are correct: 
 
